@@ -18,7 +18,8 @@ target_include_directories(whiskers-node PUBLIC
 target_compile_features(whiskers-node PUBLIC c_std_99 cxx_std_17)  # Require C99 and C++17
 ament_target_dependencies(
   whiskers-node
-  "rclcpp"
+  rclcpp
+  sensor_msgs
 )
 
 rosidl_generate_interfaces(${PROJECT_NAME}
