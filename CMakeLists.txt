@@ -9,7 +9,7 @@ endif()
 find_package(ament_cmake REQUIRED)
 find_package(rclcpp REQUIRED)
 find_package(sensor_msgs REQUIRED)
-find_package(rosidl_default_generators REQUIRED)
+find_package(braitenbug_msgs REQUIRED)
 
 add_executable(whiskers-node src/whiskers-node.cpp)
 target_include_directories(whiskers-node PUBLIC
@@ -20,11 +20,9 @@ ament_target_dependencies(
   whiskers-node
   rclcpp
   sensor_msgs
+  braitenbug_msgs
 )
 
-rosidl_generate_interfaces(${PROJECT_NAME}
-  "msg/Whiskers.msg"
-)
 
 install(TARGETS whiskers-node
   DESTINATION lib/${PROJECT_NAME})

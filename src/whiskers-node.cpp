@@ -1,7 +1,7 @@
 #include <cmath>
 #include "rclcpp/rclcpp.hpp"
 #include "sensor_msgs/msg/laser_scan.hpp"
-#include "braitenbug/msg/whiskers.hpp"
+#include "braitenbug_msgs/msg/whiskers.hpp"
 
 #define constrain(min, val, max) val<min?min:val>max?max:val
 
@@ -24,7 +24,7 @@ private:
 
 private:
   rclcpp::Subscription<sensor_msgs::msg::LaserScan>::SharedPtr _scan_subscription;
-  rclcpp::Publisher<braitenbug::msg::Whiskers>::SharedPtr _whiskers_publisher;
+  rclcpp::Publisher<braitenbug_msgs::msg::Whiskers>::SharedPtr _whiskers_publisher;
   float _dist_max;
   float _dist_min;
 
@@ -44,7 +44,7 @@ WhiskersNode::WhiskersNode(): Node("whiskers")
     rclcpp::SensorDataQoS(),
     std::bind(&WhiskersNode::_scan_to_whiskers, this, std::placeholders::_1)
   );
-  _whiskers_publisher = this->create_publisher<braitenbug::msg::Whiskers>(
+  _whiskers_publisher = this->create_publisher<braitenbug_msgs::msg::Whiskers>(
     "whiskers",
     rclcpp::QoS(10).reliability(rclcpp::ReliabilityPolicy::Reliable)
   );
@@ -59,7 +59,7 @@ void WhiskersNode::_scan_to_whiskers(std::shared_ptr<sensor_msgs::msg::LaserScan
     return;
   }
   int cone_deviation = (int)floor(22.0/scan->angle_increment);
-  auto whiskers = braitenbug::msg::Whiskers();
+  auto whiskers = braitenbug_msgs::msg::Whiskers();
   whiskers.side_left = _get_avarage_distance_in_cone(cone_deviation, -M_PI/2, scan);
   whiskers.front_left = _get_avarage_distance_in_cone(cone_deviation, -M_PI/4, scan);
   whiskers.center = _get_avarage_distance_in_cone(cone_deviation, 0, scan);

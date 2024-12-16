@@ -1,5 +1,0 @@
-float64 side_right
-float64 front_right
-float64 center
-float64 front_left
-float64 side_left
