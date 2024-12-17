@@ -25,8 +25,20 @@ ament_target_dependencies(
   braitenbug_msgs
 )
 
+# FAKE LIDAR
+add_executable(fake_lidar src/fake_lidar.cpp)
+target_include_directories(fake_lidar PUBLIC
+  $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+  $<INSTALL_INTERFACE:include/${PROJECT_NAME}>)
+target_compile_features(fake_lidar PUBLIC c_std_99 cxx_std_17)  # Require C99 and C++17
+ament_target_dependencies(
+  fake_lidar
+  rclcpp
+  sensor_msgs
+)
 
-install(TARGETS whiskers-node
+
+install(TARGETS whiskers-node fake_lidar
   DESTINATION lib/${PROJECT_NAME})
 
 
