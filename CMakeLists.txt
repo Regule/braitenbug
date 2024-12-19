@@ -1,43 +1,53 @@
 cmake_minimum_required(VERSION 3.8)
 project(braitenbug)
 
-if(CMAKE_COMPILER_IS_GNUCXX OR CMAKE_CXX_COMPILER_ID MATCHES "Clang")
-  add_compile_options(-Wall -Wextra -Wpedantic)
-endif()
-
-# find dependencies
-find_package(ament_cmake REQUIRED)
-find_package(ament_cmake_python REQUIRED)
-find_package(rclcpp REQUIRED)
-find_package(rclpy REQUIRED)
-find_package(sensor_msgs REQUIRED)
-find_package(braitenbug_msgs REQUIRED)
-
-add_executable(whiskers-node src/whiskers-node.cpp)
-target_include_directories(whiskers-node PUBLIC
-  $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
-  $<INSTALL_INTERFACE:include/${PROJECT_NAME}>)
-target_compile_features(whiskers-node PUBLIC c_std_99 cxx_std_17)  # Require C99 and C++17
-ament_target_dependencies(
-  whiskers-node
+# CONFIG
+set(PACKAGE_DEPENDENCIES 
+  ament_cmake
+  ament_cmake_python
   rclcpp
   sensor_msgs
   braitenbug_msgs
 )
 
-# FAKE LIDAR
-add_executable(fake_lidar src/fake_lidar.cpp)
-target_include_directories(fake_lidar PUBLIC
+set(PACKAGE_COMPILE_FEATURES
+  c_std_99
+  cxx_std_17
+)
+
+set(PACKAGE_INCLUDE_DIRECTORIES
   $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
-  $<INSTALL_INTERFACE:include/${PROJECT_NAME}>)
-target_compile_features(fake_lidar PUBLIC c_std_99 cxx_std_17)  # Require C99 and C++17
-ament_target_dependencies(
-  fake_lidar
+  $<INSTALL_INTERFACE:include/${PROJECT_NAME}>
+)
+
+foreach(package_name ${PACKAGE_DEPENDENCIES})
+  find_package(${package_name} REQUIRED)
+endforeach()
+
+if(CMAKE_COMPILER_IS_GNUCXX OR CMAKE_CXX_COMPILER_ID MATCHES "Clang")
+  add_compile_options(-Wall -Wextra -Wpedantic)
+endif()
+
+
+# EXECUTABLES
+add_executable(whiskers-node src/whiskers-node.cpp)
+target_include_directories(whiskers-node PUBLIC ${PACKAGE_INCLUDE_DIRECTORIES})
+target_compile_features(whiskers-node PUBLIC ${PACKAGE_COMPILE_FEATURES})  
+ament_target_dependencies(whiskers-node
+  rclcpp
+  sensor_msgs
+  braitenbug_msgs
+)
+
+add_executable(fake_lidar src/fake_lidar.cpp)
+target_include_directories(fake_lidar PUBLIC ${PACKAGE_INCLUDE_DIRECTORIES})
+target_compile_features(fake_lidar PUBLIC ${PACKAGE_COMPILE_FEATURES})  
+ament_target_dependencies(fake_lidar
   rclcpp
   sensor_msgs
 )
 
-
+# INSTALLATION
 install(TARGETS whiskers-node fake_lidar
   DESTINATION lib/${PROJECT_NAME})
 
