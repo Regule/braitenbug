@@ -8,6 +8,8 @@
 
 #include "rclcpp/rclcpp.hpp"
 #include "sensor_msgs/msg/laser_scan.hpp"
+#include "tf2_ros/transform_broadcaster.h"
+#include "geometry_msgs/msg/transform_stamped.hpp"
 
 
 //=================================================================================================
@@ -128,6 +130,8 @@ private:
     LidarConfig _config;
     rclcpp::Publisher<sensor_msgs::msg::LaserScan>::SharedPtr _scan_publisher;
     rclcpp::TimerBase::SharedPtr _scan_timer;
+    std::shared_ptr<tf2_ros::TransformBroadcaster> _tf_broadcaster;
+    
 
 private:
     void _publish_fake_scan();
@@ -144,6 +148,14 @@ FakeLidar::FakeLidar(): Node("fake_lidar")
         std::chrono::milliseconds(_config.get_scan_period_ms()),
         std::bind(&FakeLidar::_publish_fake_scan, this)
     );
+    _tf_broadcaster = std::make_shared<tf2_ros::TransformBroadcaster>(this);
+
+    geometry_msgs::msg::TransformStamped transformStamped;
+
+    transformStamped.header.stamp = this->get_clock()->now();
+    transformStamped.header.frame_id = "world";
+    transformStamped.child_frame_id = "laser_frame";
+    _tf_broadcaster->sendTransform(transformStamped);
 }
     
 void FakeLidar::_publish_fake_scan()

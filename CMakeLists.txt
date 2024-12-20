@@ -8,6 +8,7 @@ set(PACKAGE_DEPENDENCIES
   rclcpp
   sensor_msgs
   braitenbug_msgs
+  tf2_ros
 )
 
 set(PACKAGE_COMPILE_FEATURES
@@ -45,6 +46,7 @@ target_compile_features(fake_lidar PUBLIC ${PACKAGE_COMPILE_FEATURES})
 ament_target_dependencies(fake_lidar
   rclcpp
   sensor_msgs
+  tf2_ros
 )
 
 # INSTALLATION
