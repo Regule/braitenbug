@@ -196,8 +196,17 @@ void FakeLidar::_publish_fake_scan()
     std::vector<float> ranges(_config.sample_count);
     for(int i=0; i<_config.sample_count; i++)
     {
+        double x = i;
+        if(i>=_scan_counter+_config.sample_count/2)
+        {
+            x =   2*_scan_counter + _config.sample_count - i;
+        }
+        else
+        {
+            x = i -_scan_counter;
+        }
         double divider = _config.sigma * sqrt(2*M_PI);
-        double exponent = 0.0-pow(i-_scan_counter,2)/(2.0*pow(_config.sigma,2));
+        double exponent = 0.0-pow(x,2)/(2.0*pow(_config.sigma,2));
         double scale = 1 - exp(exponent)/(divider*_scale_normalization);
         ranges[i] = _config.get_scaled_sample(scale); 
     }
