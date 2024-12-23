@@ -49,14 +49,26 @@ ament_target_dependencies(fake_lidar
   tf2_ros
 )
 
-# INSTALLATION
+# Install c++ executables
 install(TARGETS whiskers-node fake_lidar
   DESTINATION lib/${PROJECT_NAME})
 
-
+# Install python scripts
 install(PROGRAMS
 scripts/ui_test.py
 DESTINATION lib/${PROJECT_NAME}
+)
+
+# Install the launch files
+install(
+  DIRECTORY launch/
+  DESTINATION share/${PROJECT_NAME}/launch
+)
+
+# Install the config files
+install(
+  DIRECTORY config/
+  DESTINATION share/${PROJECT_NAME}/config
 )
 
 if(BUILD_TESTING)
