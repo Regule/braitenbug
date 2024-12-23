@@ -199,7 +199,13 @@ void FakeLidar::_publish_fake_scan()
         double x = i;
         if(i>=_scan_counter+_config.sample_count/2)
         {
-            x =   2*_scan_counter + _config.sample_count - i;
+            x = i - _config.sample_count - _scan_counter;
+            //x =   2*_scan_counter + _config.sample_count - i;
+        }
+        else if(i<=_scan_counter-_config.sample_count/2)
+        {
+            x = i + _config.sample_count/2  - _scan_counter;
+            RCLCPP_INFO(this->get_logger(), "X=%f", x);
         }
         else
         {
