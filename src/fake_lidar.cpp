@@ -45,6 +45,8 @@ public:
     constexpr static const char* DESCRIPTION_SAMPLING_FREQUENCY =
     "Number of full Scans per second.";
 
+    constexpr static const double epsilon = 0.0001;
+
 public:
     std::pair<double,double> range;
     std::pair<double,double> angle;
@@ -65,7 +67,9 @@ public:
     
 double LidarConfig::get_scaled_sample(double scale) const
 {
-    return range.first + (range.second - range.first) * scale;
+    // Range is not inclusive we need substract small number (epsilon)
+    // so that scale 1.0 will return valid sample.
+    return range.first + (range.second - range.first - epsilon) * scale;
 }
 
 int LidarConfig::get_scan_period_ms() const
@@ -131,6 +135,7 @@ private:
     rclcpp::Publisher<sensor_msgs::msg::LaserScan>::SharedPtr _scan_publisher;
     rclcpp::TimerBase::SharedPtr _scan_timer;
     std::shared_ptr<tf2_ros::TransformBroadcaster> _tf_broadcaster;
+    int _scan_counter;
     
 
 private:
@@ -149,6 +154,7 @@ FakeLidar::FakeLidar(): Node("fake_lidar")
         std::bind(&FakeLidar::_publish_fake_scan, this)
     );
     _tf_broadcaster = std::make_shared<tf2_ros::TransformBroadcaster>(this);
+    _scan_counter = 0;
 
     geometry_msgs::msg::TransformStamped transformStamped;
 
@@ -176,8 +182,14 @@ void FakeLidar::_publish_fake_scan()
     std::vector<float> ranges(_config.sample_count);
     for(int i=0; i<_config.sample_count; i++)
     {
-        double scale = (std::sin(i*0.1)+1)/2;
+        double scale = 1 - exp(0.0-pow(i-_scan_counter,2)/2.0)/(sqrt(2*M_PI));
+        //double scale = (std::sin(i*0.1)+1)/2;
         ranges[i] = _config.get_scaled_sample(scale); 
+    }
+    _scan_counter++;
+    if(_scan_counter>=_config.sample_count)
+    {
+        _scan_counter = 0;
     }
     msg.ranges = ranges;
     _scan_publisher->publish(msg);
