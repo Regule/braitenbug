@@ -24,6 +24,7 @@ public:
     constexpr static const char* PARAM_MAX_ANGLE = "max_angle";
     constexpr static const char* PARAM_SAMPLE_COUNT = "sample_count";
     constexpr static const char* PARAM_SAMPLING_FREQUENCY = "sampling_frequency";
+    constexpr static const char* PARAM_SIGMA = "sigma";
 
     constexpr static const double DEFAULT_MIN_RANGE = 0.2;
     constexpr static const double DEFAULT_MAX_RANGE = 2.0;
@@ -31,6 +32,7 @@ public:
     constexpr static const double DEFAULT_MAX_ANGLE = M_PI;
     constexpr static const int DEFAULT_SAMPLE_COUNT = 360;
     constexpr static const double DEFAULT_SAMPLING_FREQUENCY = 10.0;
+    constexpr static const double DEFAULT_SIGMA = 1.0;
 
     constexpr static const char* DESCRIPTION_MIN_RANGE =
     "minimum range value [m]";
@@ -44,6 +46,8 @@ public:
     "Number of samples per full laser scan";
     constexpr static const char* DESCRIPTION_SAMPLING_FREQUENCY =
     "Number of full Scans per second.";
+    constexpr static const char* DESCRIPTION_SIGMA =
+    "Standard deviation of obstacle (it is essentialy normal distribution pushed into circle).";
 
     constexpr static const double epsilon = 0.0001;
 
@@ -52,6 +56,7 @@ public:
     std::pair<double,double> angle;
     int sample_count;
     double sampling_frequency;
+    double sigma;
 
 public:
     void declare_parameters(rclcpp::Node *node);
@@ -98,6 +103,8 @@ void LidarConfig::declare_parameters(rclcpp::Node *node)
     node->declare_parameter(PARAM_SAMPLE_COUNT, DEFAULT_SAMPLE_COUNT, descriptor);
     descriptor.description = DESCRIPTION_SAMPLING_FREQUENCY;
     node->declare_parameter(PARAM_SAMPLING_FREQUENCY, DEFAULT_SAMPLING_FREQUENCY, descriptor);
+    descriptor.description = DESCRIPTION_SIGMA;
+    node->declare_parameter(PARAM_SIGMA, DEFAULT_SIGMA, descriptor);
 }
 
 void LidarConfig::update_parameters(rclcpp::Node *node)
@@ -108,6 +115,7 @@ void LidarConfig::update_parameters(rclcpp::Node *node)
     this->angle.second = node->get_parameter(PARAM_MAX_ANGLE).as_double();
     this->sample_count = node->get_parameter(PARAM_SAMPLE_COUNT).as_int();
     this->sampling_frequency = node->get_parameter(PARAM_SAMPLING_FREQUENCY).as_double();
+    this->sigma = node->get_parameter(PARAM_SIGMA).as_double();
 }
 
 void LidarConfig::print_config(rclcpp::Node *node)
@@ -120,6 +128,7 @@ void LidarConfig::print_config(rclcpp::Node *node)
     RCLCPP_INFO(node->get_logger(), "Parameter %s = %f", PARAM_SAMPLING_FREQUENCY,
                 this->sampling_frequency);
     RCLCPP_INFO(node->get_logger(), "Scan step = %f", this->get_scan_step());
+    RCLCPP_INFO(node->get_logger(), "Sigma = %f", this->sigma);
 }
 
 //=================================================================================================
@@ -136,6 +145,7 @@ private:
     rclcpp::TimerBase::SharedPtr _scan_timer;
     std::shared_ptr<tf2_ros::TransformBroadcaster> _tf_broadcaster;
     int _scan_counter;
+    double _scale_normalization;
     
 
 private:
@@ -162,6 +172,10 @@ FakeLidar::FakeLidar(): Node("fake_lidar")
     transformStamped.header.frame_id = "world";
     transformStamped.child_frame_id = "laser_frame";
     _tf_broadcaster->sendTransform(transformStamped);
+
+    _scale_normalization = exp(0)/( _config.sigma * sqrt(2*M_PI));
+
+
 }
     
 void FakeLidar::_publish_fake_scan()
@@ -182,8 +196,9 @@ void FakeLidar::_publish_fake_scan()
     std::vector<float> ranges(_config.sample_count);
     for(int i=0; i<_config.sample_count; i++)
     {
-        double scale = 1 - exp(0.0-pow(i-_scan_counter,2)/2.0)/(sqrt(2*M_PI));
-        //double scale = (std::sin(i*0.1)+1)/2;
+        double divider = _config.sigma * sqrt(2*M_PI);
+        double exponent = 0.0-pow(i-_scan_counter,2)/(2.0*pow(_config.sigma,2));
+        double scale = 1 - exp(exponent)/(divider*_scale_normalization);
         ranges[i] = _config.get_scaled_sample(scale); 
     }
     _scan_counter++;
