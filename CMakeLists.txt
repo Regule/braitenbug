@@ -29,6 +29,20 @@ if(CMAKE_COMPILER_IS_GNUCXX OR CMAKE_CXX_COMPILER_ID MATCHES "Clang")
   add_compile_options(-Wall -Wextra -Wpedantic)
 endif()
 
+# LIBRARIES
+add_library(braitenbug_utils src/braitenbug_utils.cpp)
+add_library(braitenbug::braitenbug_utils ALIAS braitenbug_utils)
+target_compile_features(braitenbug_utils PUBLIC ${PACKAGE_COMPILE_FEATURES}) 
+target_include_directories(braitenbug_utils PUBLIC ${PACKAGE_INCLUDE_DIRECTORIES})
+
+install(
+  TARGETS braitenbug_utils
+  EXPORT export_braitenbug_utils
+  LIBRARY DESTINATION lib
+  ARCHIVE DESTINATION lib
+  RUNTIME DESTINATION bin
+  INCLUDES DESTINATION include
+)
 
 # EXECUTABLES
 add_executable(whiskers-node src/whiskers-node.cpp)
@@ -42,7 +56,8 @@ ament_target_dependencies(whiskers-node
 
 add_executable(fake_lidar src/fake_lidar.cpp src/fake_lidar_config.cpp)
 target_include_directories(fake_lidar PUBLIC ${PACKAGE_INCLUDE_DIRECTORIES})
-target_compile_features(fake_lidar PUBLIC ${PACKAGE_COMPILE_FEATURES})  
+target_compile_features(fake_lidar PUBLIC ${PACKAGE_COMPILE_FEATURES})
+target_link_libraries(fake_lidar braitenbug_utils)
 ament_target_dependencies(fake_lidar
   rclcpp
   sensor_msgs
