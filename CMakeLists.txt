@@ -40,7 +40,7 @@ ament_target_dependencies(whiskers-node
   braitenbug_msgs
 )
 
-add_executable(fake_lidar src/fake_lidar.cpp)
+add_executable(fake_lidar src/fake_lidar.cpp src/fake_lidar_config.cpp)
 target_include_directories(fake_lidar PUBLIC ${PACKAGE_INCLUDE_DIRECTORIES})
 target_compile_features(fake_lidar PUBLIC ${PACKAGE_COMPILE_FEATURES})  
 ament_target_dependencies(fake_lidar
