@@ -12,22 +12,27 @@ CyclicGaussian::CyclicGaussian(int center, int size, double sigma)
 
 double CyclicGaussian::operator[](int index)
 {
-    double x = index;
-    if(index>=_center+_size/2)
-    {
-        x =   2*_center + _size - index;
-    }
-    else if(index<=_center- _size/2)
-    {
-        x = index + _size/2  - _center;
-    }
-    else
-    {
-        x = index -_center;
-    }
+    double x = _get_offseted_index(index);
     double divider = _sigma * sqrt(2*M_PI);
     double exponent = 0.0-pow(x,2)/(2.0*pow(_sigma,2));
     return exp(exponent)/(divider*_normalization_factor);
+}
+
+int CyclicGaussian::_get_offseted_index(int index)
+{
+    if(index>_center+_size/2)
+    {
+        index =   index - _center - _size;
+    }
+    else if(index<_center-_size/2)
+    {
+        index = _size - _center + index + 1;
+    }
+    else
+    {
+        index = index -_center;
+    }
+    return index;
 }
 
 }
