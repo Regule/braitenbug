@@ -7,8 +7,10 @@
 #include "sensor_msgs/msg/laser_scan.hpp"
 #include "tf2_ros/transform_broadcaster.h"
 #include "geometry_msgs/msg/transform_stamped.hpp"
+#include "braitenbug/braitenbug_utils.hpp"
 #include "fake_lidar_config.hpp"
 
+using braitenbug::CyclicGaussian;
 
 //=================================================================================================
 //                                         FAKE LIDAR NODE 
@@ -24,7 +26,6 @@ private:
     rclcpp::TimerBase::SharedPtr _scan_timer;
     std::shared_ptr<tf2_ros::TransformBroadcaster> _tf_broadcaster;
     int _scan_counter;
-    double _scale_normalization;
     
 
 private:
@@ -52,9 +53,6 @@ FakeLidar::FakeLidar(): Node("fake_lidar")
     transformStamped.child_frame_id = "laser_frame";
     _tf_broadcaster->sendTransform(transformStamped);
 
-    _scale_normalization = exp(0)/( _config.sigma * sqrt(2*M_PI));
-
-
 }
     
 void FakeLidar::_publish_fake_scan()
@@ -73,26 +71,10 @@ void FakeLidar::_publish_fake_scan()
     msg.scan_time = _config.get_scan_period_ms()/1000.0;
 
     std::vector<float> ranges(_config.sample_count);
+    CyclicGaussian gaussian(_scan_counter, _config.sample_count, _config.sigma);
     for(int i=0; i<_config.sample_count; i++)
     {
-        double x = i;
-        if(i>=_scan_counter+_config.sample_count/2)
-        {
-            x = i - _config.sample_count - _scan_counter;
-            //x =   2*_scan_counter + _config.sample_count - i;
-        }
-        else if(i<=_scan_counter-_config.sample_count/2)
-        {
-            x = i + _config.sample_count/2  - _scan_counter;
-            RCLCPP_INFO(this->get_logger(), "X=%f", x);
-        }
-        else
-        {
-            x = i -_scan_counter;
-        }
-        double divider = _config.sigma * sqrt(2*M_PI);
-        double exponent = 0.0-pow(x,2)/(2.0*pow(_config.sigma,2));
-        double scale = 1 - exp(exponent)/(divider*_scale_normalization);
+        double scale = 1.0 - gaussian[i];
         ranges[i] = _config.get_scaled_sample(scale); 
     }
     _scan_counter++;
