@@ -18,7 +18,7 @@ def generate_launch_description()-> LaunchDescription:
         arguments = f'-d {(get_package_share_directory('braitenbug'))}/config/test_false_lidar.rviz'
     )
 
-    rviz_node = Node(
+    whiskers_node = Node(
         package='braitenbug',
         executable='whiskers-node',
         parameters=[{
@@ -30,4 +30,5 @@ def generate_launch_description()-> LaunchDescription:
     description = LaunchDescription()
     description.add_action(lidar_node)
     description.add_action(rviz_node)
+    description.add_action(whiskers_node)
     return description

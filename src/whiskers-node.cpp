@@ -83,7 +83,7 @@ void WhiskersNode::_scan_to_whiskers(std::shared_ptr<sensor_msgs::msg::LaserScan
   {
     return;
   }
-  int cone_deviation = (int)floor(22.0/scan->angle_increment);
+  int cone_deviation = (int)floor((M_PI/8.0)/scan->angle_increment);
   auto whiskers = braitenbug_msgs::msg::Whiskers();
   whiskers.side_left = _get_avarage_distance_in_cone(cone_deviation, -M_PI/2, scan);
   whiskers.front_left = _get_avarage_distance_in_cone(cone_deviation, -M_PI/4, scan);
@@ -100,7 +100,7 @@ bool WhiskersNode::_validate_scan(std::shared_ptr<sensor_msgs::msg::LaserScan> s
     RCLCPP_ERROR(this->get_logger(), "Whiskers must use a 360 lidar as input.");
     return false;
   }
-  if(scan->angle_increment<1.0)
+  if(scan->angle_increment>1.0)
   {
     RCLCPP_ERROR(this->get_logger(), 
                  "Whiskers must use lidar with scan increment not greater than 1.");
@@ -121,11 +121,13 @@ double WhiskersNode::_get_avarage_distance_in_cone(int cone_deviation,
     {
       idx += scan->ranges.size();
     }
-    else if (idx>scan->ranges.size())
+    else if(idx >= (int)scan->ranges.size())
     {
-      idx -= scan->ranges.size();
+      idx -= scan->ranges.size() - 1;
     }
-    distance += scan->ranges.at(idx);
+    //RCLCPP_ERROR(this->get_logger(), "base_idx=%d cone_ddeviation=%d cone_angle=%f idx=%d", base_idx, cone_deviation, cone_angle, idx);
+    size_t index = (size_t)idx;
+    distance += scan->ranges.at(index);
   }
   distance /= cone_deviation*2;
   return distance;
