@@ -16,8 +16,8 @@ public:
 private:
   constexpr static const char* PARAM_DIST_MAX = "dist_max";
   constexpr static const char* PARAM_DIST_MIN = "dist_min";
-  constexpr static float DEFAULT_DIST_MIN = 0.0;
-  constexpr static float DEFAULT_DIST_MAX = 0.0;
+  constexpr static double DEFAULT_DIST_MIN = 0.0;
+  constexpr static double DEFAULT_DIST_MAX = 0.0;
   constexpr static const char* DESC_DIST_MAX = "dist_max";
   constexpr static const char* DESC_DIST_MIN = "dist_min";
 
@@ -25,8 +25,8 @@ private:
 private:
   rclcpp::Subscription<sensor_msgs::msg::LaserScan>::SharedPtr _scan_subscription;
   rclcpp::Publisher<braitenbug_msgs::msg::Whiskers>::SharedPtr _whiskers_publisher;
-  float _dist_max;
-  float _dist_min;
+  double _dist_max;
+  double _dist_min;
 
 private:
   void _scan_to_whiskers(std::shared_ptr<sensor_msgs::msg::LaserScan> scan);
@@ -37,8 +37,33 @@ private:
 
 };
 
+void WhiskersNode::declare_parameters()
+{
+  auto descriptor = rcl_interfaces::msg::ParameterDescriptor();
+
+  descriptor.description = DESC_DIST_MAX;
+  this->declare_parameter(PARAM_DIST_MAX, DEFAULT_DIST_MAX, descriptor);
+  descriptor.description = DESC_DIST_MIN;
+  this->declare_parameter(PARAM_DIST_MIN, DEFAULT_DIST_MIN, descriptor);
+}
+
+void WhiskersNode::update_parameters()
+{
+  this->_dist_min = this->get_parameter(PARAM_DIST_MIN).as_double();
+  this->_dist_max = this->get_parameter(PARAM_DIST_MAX).as_double();
+}
+
+void WhiskersNode::print_parameters()
+{
+  RCLCPP_INFO(this->get_logger(), "Parameter %s = %f", PARAM_DIST_MIN, this->_dist_min);
+  RCLCPP_INFO(this->get_logger(), "Parameter %s = %f", PARAM_DIST_MAX, this->_dist_max);
+}
+
 WhiskersNode::WhiskersNode(): Node("whiskers")
 {
+  declare_parameters();
+  update_parameters();
+  print_parameters();
   _scan_subscription = this->create_subscription<sensor_msgs::msg::LaserScan>(
     "scan",
     rclcpp::SensorDataQoS(),
