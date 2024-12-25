@@ -4,13 +4,8 @@ from ament_index_python.packages import get_package_share_directory
 
 def generate_launch_description()-> LaunchDescription:
 
-    lidar_node = Node(
-        package='braitenbug',
-        executable='fake_lidar',
-        parameters=[{
-            'sigma': 30.0
-        }]
-    )
+    MIN_DISTANCE: float = 0.2
+    MAX_DISTANCE: float = 3.0
 
     rviz_node = Node(
         package='rviz2',
@@ -18,16 +13,34 @@ def generate_launch_description()-> LaunchDescription:
         arguments = f'-d {(get_package_share_directory('braitenbug'))}/config/test_false_lidar.rviz'
     )
 
+    rqt_node = Node(
+        package='rqt_console',
+        executable='rqt_console',
+    )
+
+    lidar_node = Node(
+        package='braitenbug',
+        executable='fake_lidar',
+        parameters=[{
+            'sigma': 30.0,
+            'min_range': MIN_DISTANCE,
+            'max_range': MAX_DISTANCE
+        }]
+    )
+
+    
+
     whiskers_node = Node(
         package='braitenbug',
         executable='whiskers-node',
         parameters=[{
-            'dist_min': 0.2,
-            'dist_max': 2.0
+            'dist_min': MIN_DISTANCE,
+            'dist_max': MAX_DISTANCE
         }]
     )
 
     description = LaunchDescription()
+    description.add_action(rqt_node)
     description.add_action(lidar_node)
     description.add_action(rviz_node)
     description.add_action(whiskers_node)
