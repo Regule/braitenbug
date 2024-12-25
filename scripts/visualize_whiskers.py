@@ -81,7 +81,7 @@ class WhiskersUI:
     def __cleanup(self)-> None:
         pg.quit()
 
-class WhiskersSubscriber(Node):
+class WhiskersUI(Node):
 
     def __init__(self):
         super().__init__('whiskers_subscriber')
@@ -101,3 +101,17 @@ class WhiskersSubscriber(Node):
             msg.front_left,
             msg.side_left
         ]
+
+def main(args=None):
+    rclpy.init(args=args)
+
+    whiskers = WhiskersSubscriber()
+    ui = WhiskersSubscriber(whiskers)
+    ui.run()
+
+    whiskers.destroy_node()
+    rclpy.shutdown()
+
+
+if __name__ == '__main__':
+    main()
