@@ -39,9 +39,15 @@ def generate_launch_description()-> LaunchDescription:
         }]
     )
 
+    visualization_node = Node(
+        package='braitenbug',
+        executable='visualize_whiskers.py'
+    )
+
     description = LaunchDescription()
     description.add_action(rqt_node)
     description.add_action(lidar_node)
     description.add_action(rviz_node)
     description.add_action(whiskers_node)
+    description.add_action(visualization_node)
     return description

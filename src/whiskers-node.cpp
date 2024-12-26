@@ -125,7 +125,6 @@ double WhiskersNode::_get_avarage_distance_in_cone(int cone_deviation,
     {
       idx -= scan->ranges.size() - 1;
     }
-    //RCLCPP_ERROR(this->get_logger(), "base_idx=%d cone_ddeviation=%d cone_angle=%f idx=%d", base_idx, cone_deviation, cone_angle, idx);
     size_t index = (size_t)idx;
     distance += scan->ranges.at(index);
   }

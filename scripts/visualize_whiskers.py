@@ -11,7 +11,7 @@ class Wheel:
 
     def __init__(self,
                  position: tuple[int,int],
-                 radius: float = 10.0,
+                 radius: float = 100,
                  )-> None:
         self.__position: list[int,int] = list(position)
         self.__radius: float = radius
@@ -19,7 +19,7 @@ class Wheel:
 
     def render(self, surface: pg.Surface)-> None:
         for i, val in enumerate(self._measurements):
-            angle = math.radians(i * (360 / self.__lines) + self.__angle)
+            angle = math.radians(i * (360 / len(self._measurements)))
             start_x = self.__position[0] + (self.__radius - val) * math.cos(angle)
             start_y = self.__position[1] + (self.__radius - val) * math.sin(angle)
             end_x = self.__position[0] + self.__radius * math.cos(angle)
@@ -42,7 +42,7 @@ class WhiskersUI:
         self.__display: pg.Surface|None = None
         self.__size: tuple[int, int] = (640, 400)
         self.__clock: pg.time.Clock = pg.time.Clock()
-        self.__node: Node = Node()
+        self.__node: Node = node
 
         center: tuple[int,int] = (self.__size[0]//2, self.__size[1]//2)
         self.__wheel:Wheel = Wheel(center)
@@ -70,7 +70,7 @@ class WhiskersUI:
                 self.__running = False
 
     def __update_logic(self)-> None:
-        rclpy.spin_once(self.__node)
+        rclpy.spin_once(self.__node, timeout_sec=0)
 
     def __render(self)-> None:
         self.__display.fill((0,0,0))
@@ -81,7 +81,7 @@ class WhiskersUI:
     def __cleanup(self)-> None:
         pg.quit()
 
-class WhiskersUI(Node):
+class WhiskersSubscriber(Node):
 
     def __init__(self):
         super().__init__('whiskers_subscriber')
@@ -101,12 +101,13 @@ class WhiskersUI(Node):
             msg.front_left,
             msg.side_left
         ]
+        self.get_logger().info(f'Whiskers data = {self.whisker_data}')
 
 def main(args=None):
     rclpy.init(args=args)
 
     whiskers = WhiskersSubscriber()
-    ui = WhiskersSubscriber(whiskers)
+    ui = WhiskersUI(whiskers)
     ui.run()
 
     whiskers.destroy_node()
