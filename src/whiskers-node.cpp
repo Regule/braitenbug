@@ -73,8 +73,6 @@ WhiskersNode::WhiskersNode(): Node("whiskers")
     "whiskers",
     rclcpp::QoS(10).reliability(rclcpp::ReliabilityPolicy::Reliable)
   );
-  _dist_min = DEFAULT_DIST_MIN;
-  _dist_max = DEFAULT_DIST_MAX;
 }
 
 void WhiskersNode::_scan_to_whiskers(std::shared_ptr<sensor_msgs::msg::LaserScan> scan)
@@ -128,7 +126,8 @@ double WhiskersNode::_get_avarage_distance_in_cone(int cone_deviation,
     size_t index = (size_t)idx;
     distance += scan->ranges.at(index);
   }
-  distance /= cone_deviation*2;
+  distance = distance / (cone_deviation*2);
+  distance = (distance - _dist_min) / (_dist_max-_dist_min);
   return distance;
 }
 
