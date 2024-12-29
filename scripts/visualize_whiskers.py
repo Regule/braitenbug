@@ -101,7 +101,6 @@ class WhiskersSubscriber(Node):
             msg.front_left,
             msg.side_left
         ]
-        self.get_logger().info(f'Whiskers data = {self.whisker_data}')
 
 def main(args=None):
     rclpy.init(args=args)
