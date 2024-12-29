@@ -128,7 +128,7 @@ double WhiskersNode::_get_avarage_distance_in_cone(int cone_deviation,
   }
   distance = distance / (cone_deviation*2);
   distance = (distance - _dist_min) / (_dist_max-_dist_min);
-  return constrain(0.0, distance, 1.0);
+  return constrain(0.0, distance, 1.0); // TODO: There should be no artificial constrain as it may hide errors in calculations
 }
 
 int main(int argc, char ** argv)

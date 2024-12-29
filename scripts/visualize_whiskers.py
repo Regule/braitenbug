@@ -15,13 +15,13 @@ class Wheel:
                  )-> None:
         self.__position: list[int,int] = list(position)
         self.__radius: float = radius
-        self._measurements: list[float] = [0.0, 0.0, 0.0, 0.0, 0.0]
+        self.measurements: list[float] = [0.0, 0.0, 0.0, 0.0, 0.0]
 
     def render(self, surface: pg.Surface)-> None:
-        for i, val in enumerate(self._measurements):
-            angle = math.radians(i * (360 / len(self._measurements)))
-            start_x = self.__position[0] + (self.__radius - val) * math.cos(angle)
-            start_y = self.__position[1] + (self.__radius - val) * math.sin(angle)
+        for i, val in enumerate(self.measurements):
+            angle = math.radians(i * (360 / len(self.measurements)))
+            start_x = self.__position[0] + (self.__radius - val * self.__radius) * math.cos(angle)
+            start_y = self.__position[1] + (self.__radius - val * self.__radius) * math.sin(angle)
             end_x = self.__position[0] + self.__radius * math.cos(angle)
             end_y = self.__position[1] + self.__radius * math.sin(angle)
             pg.draw.line(surface,
@@ -71,6 +71,7 @@ class WhiskersUI:
 
     def __update_logic(self)-> None:
         rclpy.spin_once(self.__node, timeout_sec=0)
+        self.__wheel.measurements = self.__node.whiskers_data
 
     def __render(self)-> None:
         self.__display.fill((0,0,0))
@@ -91,10 +92,10 @@ class WhiskersSubscriber(Node):
             self.listener_callback,
             10)
         
-        self.whisker_data = [0.0, 0.0, 0.0, 0.0, 0.0]
+        self.whiskers_data = [0.0, 0.0, 0.0, 0.0, 0.0]
 
     def listener_callback(self, msg: Whiskers):
-        self.whisker_data = [
+        self.whiskers_data = [
             msg.side_right,
             msg.front_right,
             msg.center,

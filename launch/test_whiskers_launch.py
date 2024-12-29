@@ -9,11 +9,11 @@ def generate_launch_description()-> LaunchDescription:
     MIN_DISTANCE: float = 0.2
     MAX_DISTANCE: float = 3.0
 
-    #rviz_node = Node(
-    #    package='rviz2',
-    #    executable='rviz2',
-    #    arguments = f'-d {(get_package_share_directory('braitenbug'))}/config/test_false_lidar.rviz'
-    #)
+    rviz_node = Node(
+        package='rviz2',
+        executable='rviz2',
+        arguments = f'-d {(get_package_share_directory('braitenbug'))}/config/test_false_lidar.rviz'
+    )
 
     rqt = ExecuteProcess(
             cmd=[
@@ -57,7 +57,7 @@ def generate_launch_description()-> LaunchDescription:
     description = LaunchDescription()
     description.add_action(rqt)
     description.add_action(lidar_node)
-    #description.add_action(rviz_node)
+    description.add_action(rviz_node)
     description.add_action(whiskers_node)
     description.add_action(visualization_node)
     return description
