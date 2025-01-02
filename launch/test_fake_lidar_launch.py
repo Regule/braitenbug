@@ -12,15 +12,21 @@ def generate_launch_description()-> LaunchDescription:
         }]
     )
 
-    rviz_config_path = f'-d {(get_package_share_directory('braitenbug'))}/config/test_false_lidar.rviz'
+    rviz_config_path = f'{(get_package_share_directory('braitenbug'))}/config/test_false_lidar.rviz'
     print(f'RVIZ_CONFIG_PATH = {rviz_config_path}')
     rviz_node = Node(
         package='rviz2',
         executable='rviz2',
-        arguments = rviz_config_path
+        arguments = ['-d', rviz_config_path]
+    )
+
+    visualization_node = Node(
+        package='braitenbug',
+        executable='visualize_lidar.py'
     )
 
     description = LaunchDescription()
     description.add_action(lidar_node)
     description.add_action(rviz_node)
+    description.add_action(visualization_node)
     return description

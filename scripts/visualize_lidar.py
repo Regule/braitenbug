@@ -19,7 +19,7 @@ class Wheel:
 
     def render(self, surface: pg.Surface)-> None:
         for i, distance in enumerate(self.measurements):
-            angle = math.radians(i * (360 / (len(self.measurements)-1)) - 180)
+            angle = 0 - math.radians(i * (360 / (len(self.measurements))) - 90 )
             line_length = self.__radius * distance
             end_x = self.__position[0] + line_length * math.cos(angle)
             end_y = self.__position[1] + line_length * math.sin(angle)
