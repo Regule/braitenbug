@@ -72,6 +72,7 @@ install(TARGETS whiskers-node fake_lidar
 install(PROGRAMS
 scripts/ui_test.py
 scripts/visualize_whiskers.py
+scripts/visualize_lidar.py
 DESTINATION lib/${PROJECT_NAME}
 )
 
