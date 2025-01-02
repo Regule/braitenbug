@@ -2,6 +2,7 @@ from launch import LaunchDescription
 from launch.actions import ExecuteProcess
 from launch_ros.actions import Node
 from ament_index_python.packages import get_package_share_directory
+from launch_ros.parameter_descriptions import ParameterValue
 import os
 
 def generate_launch_description()-> LaunchDescription:
@@ -9,11 +10,18 @@ def generate_launch_description()-> LaunchDescription:
     MIN_DISTANCE: float = 0.2
     MAX_DISTANCE: float = 3.0
 
+    rviz_config_path = f'{(get_package_share_directory('braitenbug'))}/config/test_false_lidar.rviz'
+    print(f'RVIZ_CONFIG_PATH = {rviz_config_path}')
+
     rviz_node = Node(
         package='rviz2',
         executable='rviz2',
-        arguments = f'-d {(get_package_share_directory('braitenbug'))}/config/test_false_lidar.rviz'
+        parameters=[
+                {'log_level': ParameterValue('DEBUG', value_type=str)},
+        ],
+        arguments = ['-d', rviz_config_path]
     )
+
 
     rqt = ExecuteProcess(
             cmd=[
