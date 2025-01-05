@@ -15,12 +15,18 @@ class Wheel:
                  )-> None:
         self.__position: list[int,int] = list(position)
         self.__radius: float = radius
-        self.measurements: list[float] = [0.0, 0.0, 0.0, 0.0, 0.0]
+        self.scan: LaserScan = LaserScan()
 
     def render(self, surface: pg.Surface)-> None:
-        for i, distance in enumerate(self.measurements):
-            angle = 0 - math.radians(i * (360 / (len(self.measurements))) - 90 )
-            line_length = self.__radius * distance
+        if not self.scan.ranges:
+            return
+        
+        print('dupa')
+        for i, distance in enumerate(self.scan.ranges):
+            angle = i * self.scan.angle_increment # - self.scan.angle_min
+            angle = 0 - angle + math.pi/2 # From ROS2 to pygame
+            scale = (distance + self.scan.range_min) / (self.scan.range_max - self.scan.range_min)
+            line_length = self.__radius * scale
             end_x = self.__position[0] + line_length * math.cos(angle)
             end_y = self.__position[1] + line_length * math.sin(angle)
             print(f'{end_x}({type(end_x)})')
@@ -66,7 +72,7 @@ class LidarUI:
 
     def __update_logic(self)-> None:
         rclpy.spin_once(self.__node, timeout_sec=0)
-        self.__wheel.measurements = self.__node.scan
+        self.__wheel.scan = self.__node.scan
 
     def __render(self)-> None:
         self.__display.fill((0,0,0))
@@ -90,8 +96,7 @@ class LidarMonitor(Node):
         self.max_distance = 1.0
     
     def scan_callback(self, msg: LaserScan):
-        self.max_distance = msg.range_max
-        self.scan = np.asarray(msg.ranges, dtype=np.int64)
+        self.scan = msg
         
 
 def main(args=None):
