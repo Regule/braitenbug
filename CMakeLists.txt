@@ -73,6 +73,7 @@ install(PROGRAMS
 scripts/ui_test.py
 scripts/visualize_whiskers.py
 scripts/visualize_lidar.py
+scripts/whiskers_experiment.py
 DESTINATION lib/${PROJECT_NAME}
 )
 
