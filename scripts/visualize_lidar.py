@@ -23,13 +23,12 @@ class Wheel:
         
         print('dupa')
         for i, distance in enumerate(self.scan.ranges):
-            angle = i * self.scan.angle_increment # - self.scan.angle_min
+            angle = i * self.scan.angle_increment
             angle = 0 - angle + math.pi/2 # From ROS2 to pygame
             scale = (distance + self.scan.range_min) / (self.scan.range_max - self.scan.range_min)
             line_length = self.__radius * scale
             end_x = self.__position[0] + line_length * math.cos(angle)
             end_y = self.__position[1] + line_length * math.sin(angle)
-            print(f'{end_x}({type(end_x)})')
             pg.draw.line(surface,
                          (0, 255, 0),
                          (self.__position[0], self.__position[1]),
