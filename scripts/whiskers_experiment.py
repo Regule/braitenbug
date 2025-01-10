@@ -8,20 +8,7 @@ from rclpy.node import Node
 from sensor_msgs.msg import LaserScan
 
 
-def polar_to_cartesian_matrix(polar_matrix):
-    """
-    Convert a matrix of polar coordinates to Cartesian coordinates.
-    
-    Parameters:
-    polar_matrix (numpy.ndarray): A 2xN matrix where the first row is r (radius) 
-                                   and the second row is theta (angle in radians).
-    
-    Returns:
-    numpy.ndarray: A 2xN matrix where the first row is x and the second row is y.
-    """
-    r = polar_matrix[0, :]
-    theta = polar_matrix[1, :]
-    
+def polar_to_cartesian_matrix(r, theta):    
     x = r * np.cos(theta)
     y = r * np.sin(theta)
     
@@ -44,7 +31,10 @@ class Wheel:
         if not self.scan.ranges:
             return
         
-        print('dupa')
+        distances = self.scan.ranges
+        angles = np.linspace(self.scan.angle_min, self.scan.angle_max, len(self.scan.ranges))
+        endpoints = polar_to_cartesian_matrix(distances, angles)
+        
         for i, distance in enumerate(self.scan.ranges):
             angle = i * self.scan.angle_increment
             angle = 0 - angle + math.pi/2 # From ROS2 to pygame
