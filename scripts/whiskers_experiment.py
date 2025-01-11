@@ -16,7 +16,8 @@ def polar_to_cartesian_matrix(r, theta):
     cartesian_matrix = np.vstack((x, y))
     return cartesian_matrix
 
-
+def angle_ros2_to_pygame(angle):
+    return np.pi + np.pi/2 - angle
 
 class Wheel:
 
@@ -35,6 +36,7 @@ class Wheel:
         line_lengths = (ranges + self.scan.range_min) / (self.scan.range_max - self.scan.range_min)
         line_lengths *= self.__radius
         angles = np.linspace(self.scan.angle_min, self.scan.angle_max, len(self.scan.ranges))
+        angles = angle_ros2_to_pygame(angles)
         endpoints = polar_to_cartesian_matrix(line_lengths, angles)
 
         
