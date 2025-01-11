@@ -4,6 +4,7 @@ import pygame as pg
 import math
 import numpy as np
 import rclpy
+import rclpy.logging
 from rclpy.node import Node
 from sensor_msgs.msg import LaserScan
 
@@ -30,22 +31,20 @@ class Wheel:
     def render(self, surface: pg.Surface)-> None:
         if not self.scan.ranges:
             return
-        
-        distances = self.scan.ranges
+        ranges = np.asarray(self.scan.ranges)
+        line_lengths = (ranges + self.scan.range_min) / (self.scan.range_max - self.scan.range_min)
+        line_lengths *= self.__radius
         angles = np.linspace(self.scan.angle_min, self.scan.angle_max, len(self.scan.ranges))
-        endpoints = polar_to_cartesian_matrix(distances, angles)
+        endpoints = polar_to_cartesian_matrix(line_lengths, angles)
+
         
-        for i, distance in enumerate(self.scan.ranges):
-            angle = i * self.scan.angle_increment
-            angle = 0 - angle + math.pi/2 # From ROS2 to pygame
-            scale = (distance + self.scan.range_min) / (self.scan.range_max - self.scan.range_min)
-            line_length = self.__radius * scale
-            end_x = self.__position[0] + line_length * math.cos(angle)
-            end_y = self.__position[1] + line_length * math.sin(angle)
+        for x, y in endpoints.T:
+            x = int(x+self.__position[0])
+            y = int(y+self.__position[1])
             pg.draw.line(surface,
                          (0, 255, 0),
                          (self.__position[0], self.__position[1]),
-                         (end_x, end_y),
+                         (x, y),
                          2)
 
 class LidarUI:
