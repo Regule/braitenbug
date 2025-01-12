@@ -48,6 +48,49 @@ class Wheel:
                          (self.__position[0], self.__position[1]),
                          (x, y),
                          2)
+            
+class Cone:
+
+    def __init__(self,
+                 position: tuple[int,int],
+                 radius: float = 100,
+                 angle: float = 0.0,
+                 width: float = np.pi/2
+                 )-> None:
+        self.position: list[int,int] = list(position)
+        self.radius: float = radius
+        self.angle: float = angle
+        self.width: float = width
+        self.scan: LaserScan = LaserScan()
+    
+    def render(self, surface: pg.Surface)-> None:
+        if not self.scan.ranges:
+            return
+        
+        start_index = int((self.angle-self.width/2 - self.scan.angle_min)/self.scan.angle_increment)
+        end_index = int((self.angle+self.width/2 - self.scan.angle_min)/self.scan.angle_increment)
+        if start_index<0 or end_index>=len(self.scan.ranges):
+            return
+
+    
+        ranges = np.asarray(self.scan.ranges[start_index:end_index])
+        line_lengths = (ranges + self.scan.range_min) / (self.scan.range_max - self.scan.range_min)
+        line_lengths *= self.radius
+        angles = np.linspace(self.angle-self.width/2, self.angle+self.width/2, len(line_lengths))
+
+    
+        
+        angles = angle_ros2_to_pygame(angles)
+        endpoints = polar_to_cartesian_matrix(line_lengths, angles)
+
+        for x, y in endpoints.T:
+            x = int(x+self.position[0])
+            y = int(y+self.position[1])
+            pg.draw.line(surface,
+                         (255, 0, 0),
+                         (self.position[0], self.position[1]),
+                         (x, y),
+                         2)
 
 class LidarUI:
 
@@ -60,6 +103,7 @@ class LidarUI:
 
         center: tuple[int,int] = (self.__size[0]//2, self.__size[1]//2)
         self.__wheel:Wheel = Wheel(center)
+        self.__cone:Cone = Cone(center)
 
     def run(self)-> None:
         self.__initialize()
@@ -86,10 +130,12 @@ class LidarUI:
     def __update_logic(self)-> None:
         rclpy.spin_once(self.__node, timeout_sec=0)
         self.__wheel.scan = self.__node.scan
+        self.__cone.scan = self.__node.scan
 
     def __render(self)-> None:
         self.__display.fill((0,0,0))
         self.__wheel.render(self.__display)
+        self.__cone.render(self.__display)
         pg.display.flip()
         self.__clock.tick(60) # FPS cap
 
