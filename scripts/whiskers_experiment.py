@@ -100,6 +100,7 @@ class LidarUI:
         self.__size: tuple[int, int] = (640, 400)
         self.__clock: pg.time.Clock = pg.time.Clock()
         self.__node: Node = node
+        self.__angle_step: float = np.pi/64
 
         center: tuple[int,int] = (self.__size[0]//2, self.__size[1]//2)
         self.__wheel:Wheel = Wheel(center)
@@ -126,6 +127,14 @@ class LidarUI:
         elif event.type == pg.KEYDOWN:
             if event.key == pg.K_q or event.key == pg.K_ESCAPE:
                 self.__running = False
+            elif event.key == pg.K_UP:
+                self.__cone.width += self.__angle_step
+            elif event.key == pg.K_DOWN:
+                self.__cone.width -= self.__angle_step
+            elif event.key == pg.K_LEFT:
+                self.__cone.angle += self.__angle_step
+            elif event.key == pg.K_RIGHT:
+                self.__cone.angle -= self.__angle_step
 
     def __update_logic(self)-> None:
         rclpy.spin_once(self.__node, timeout_sec=0)
