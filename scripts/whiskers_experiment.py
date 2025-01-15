@@ -62,6 +62,8 @@ class Cone:
         self.angle: float = angle
         self.width: float = width
         self.scan: LaserScan = LaserScan()
+        self.start = 0
+        self.end = 0
     
     def render(self, surface: pg.Surface)-> None:
         if not self.scan.ranges:
@@ -69,6 +71,8 @@ class Cone:
         
         start_index = int((self.angle-self.width/2 - self.scan.angle_min)/self.scan.angle_increment)
         end_index = int((self.angle+self.width/2 - self.scan.angle_min)/self.scan.angle_increment)
+        self.start = start_index
+        self.end = end_index
         if start_index<0 or end_index>=len(self.scan.ranges):
             return
 
@@ -105,6 +109,7 @@ class LidarUI:
         center: tuple[int,int] = (self.__size[0]//2, self.__size[1]//2)
         self.__wheel:Wheel = Wheel(center)
         self.__cone:Cone = Cone(center)
+        self.__font =  None
 
     def run(self)-> None:
         self.__initialize()
@@ -120,6 +125,7 @@ class LidarUI:
         self.__display = pg.display.set_mode(self.__size,
                                             pg.HWSURFACE | pg.DOUBLEBUF)
         self.__running = True
+        self.__font = pg.font.Font(pg.font.get_default_font(), 20)
 
     def __handle_event(self, event: pg.event.Event)-> None:
         if event.type == pg.QUIT:
@@ -145,6 +151,9 @@ class LidarUI:
         self.__display.fill((0,0,0))
         self.__wheel.render(self.__display)
         self.__cone.render(self.__display)
+        msg = f'Start={self.__cone.start}  End={self.__cone.end}'
+        label = self.__font.render(msg, 1, (255,255,0))
+        self.__display.blit(label, (0, self.__size[1]-30))
         pg.display.flip()
         self.__clock.tick(60) # FPS cap
 
