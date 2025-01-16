@@ -116,6 +116,7 @@ class LidarUI:
         while(self.__running):
             for event in pg.event.get():
                 self.__handle_event(event)
+            self.__handle_keyboard()
             self.__update_logic()
             self.__render()
         self.__cleanup()
@@ -133,14 +134,18 @@ class LidarUI:
         elif event.type == pg.KEYDOWN:
             if event.key == pg.K_q or event.key == pg.K_ESCAPE:
                 self.__running = False
-            elif event.key == pg.K_UP:
-                self.__cone.width += self.__angle_step
-            elif event.key == pg.K_DOWN:
-                self.__cone.width -= self.__angle_step
-            elif event.key == pg.K_LEFT:
-                self.__cone.angle += self.__angle_step
-            elif event.key == pg.K_RIGHT:
-                self.__cone.angle -= self.__angle_step
+
+    def __handle_keyboard(self):
+        keys = pg.key.get_pressed()
+        if keys[pg.K_UP]:
+            self.__cone.width += self.__angle_step
+        if keys[pg.K_DOWN]:
+            self.__cone.width -= self.__angle_step
+        if keys[pg.K_LEFT]:
+            self.__cone.angle += self.__angle_step
+        if keys[pg.K_RIGHT]:
+            self.__cone.angle -= self.__angle_step
+
 
     def __update_logic(self)-> None:
         rclpy.spin_once(self.__node, timeout_sec=0)
