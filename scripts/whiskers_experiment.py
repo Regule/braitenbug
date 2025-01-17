@@ -10,6 +10,20 @@ from sensor_msgs.msg import LaserScan
 import braitenbug.geometry as geo
 
 
+class WrappedList:
+
+    def __init__(self, contents: list)-> None:
+        self.__contents = contents
+    
+    def __getitem__(self, idx:int):
+        if not self.__contents:
+            raise IndexError(f'Attempted to use a empty wrapped list')
+        while idx < 0:
+            idx += len(self.__contents)
+        while idx >= len(self.__contents):
+            idx -= len(self.__contents)
+        return self.__contents[idx]
+
 class Wheel:
 
     def __init__(self,
