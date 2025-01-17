@@ -44,6 +44,8 @@ install(
   INCLUDES DESTINATION include
 )
 
+ament_python_install_package(${PROJECT_NAME})
+
 # EXECUTABLES
 add_executable(whiskers-node src/whiskers-node.cpp)
 target_include_directories(whiskers-node PUBLIC ${PACKAGE_INCLUDE_DIRECTORIES})

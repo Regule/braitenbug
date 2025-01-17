@@ -1,23 +1,14 @@
 #!/usr/bin/env python3
 
 import pygame as pg
-import math
 import numpy as np
+import numpy.typing as npt
 import rclpy
 import rclpy.logging
 from rclpy.node import Node
 from sensor_msgs.msg import LaserScan
+import braitenbug.geometry as geo
 
-
-def polar_to_cartesian_matrix(r, theta):    
-    x = r * np.cos(theta)
-    y = r * np.sin(theta)
-    
-    cartesian_matrix = np.vstack((x, y))
-    return cartesian_matrix
-
-def angle_ros2_to_pygame(angle):
-    return np.pi + np.pi/2 - angle
 
 class Wheel:
 
@@ -36,8 +27,8 @@ class Wheel:
         line_lengths = (ranges + self.scan.range_min) / (self.scan.range_max - self.scan.range_min)
         line_lengths *= self.__radius
         angles = np.linspace(self.scan.angle_min, self.scan.angle_max, len(self.scan.ranges))
-        angles = angle_ros2_to_pygame(angles)
-        endpoints = polar_to_cartesian_matrix(line_lengths, angles)
+        angles = geo.angle_ros2_to_pygame(angles)
+        endpoints = geo.polar_to_cartesian_matrix(line_lengths, angles)
 
         
         for x, y in endpoints.T:
@@ -64,28 +55,35 @@ class Cone:
         self.scan: LaserScan = LaserScan()
         self.start = 0
         self.end = 0
-    
+
+    @staticmethod    
+    def calculate_indexes(cone_angle: float, cone_width:float,
+                          angle_min:float, angle_increment: float):
+        start = int((cone_angle-cone_width/2 - angle_min)/angle_increment)
+        end = int((cone_angle+cone_width/2 - angle_min)/angle_increment)
+        return start, end
+
     def render(self, surface: pg.Surface)-> None:
         if not self.scan.ranges:
             return
-        
-        start_index = int((self.angle-self.width/2 - self.scan.angle_min)/self.scan.angle_increment)
-        end_index = int((self.angle+self.width/2 - self.scan.angle_min)/self.scan.angle_increment)
-        self.start = start_index
-        self.end = end_index
-        if start_index<0 or end_index>=len(self.scan.ranges):
+        self.start, self.end = Cone.calculate_indexes(self.angle,
+                                                      self.width,
+                                                      self.scan.angle_min,
+                                                      self.scan.angle_increment)
+        if self.start<0 or self.end>=len(self.scan.ranges):
+            rclpy.logging.get_logger('global').warn(f'RANGE {self.start} -> {self.end}')
             return
 
     
-        ranges = np.asarray(self.scan.ranges[start_index:end_index])
+        ranges = np.asarray(self.scan.ranges[self.start:self.end])
         line_lengths = (ranges + self.scan.range_min) / (self.scan.range_max - self.scan.range_min)
         line_lengths *= self.radius
         angles = np.linspace(self.angle-self.width/2, self.angle+self.width/2, len(line_lengths))
 
     
         
-        angles = angle_ros2_to_pygame(angles)
-        endpoints = polar_to_cartesian_matrix(line_lengths, angles)
+        angles = geo.angle_ros2_to_pygame(angles)
+        endpoints = geo.polar_to_cartesian_matrix(line_lengths, angles)
 
         for x, y in endpoints.T:
             x = int(x+self.position[0])
