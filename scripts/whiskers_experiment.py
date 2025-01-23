@@ -10,14 +10,14 @@ from sensor_msgs.msg import LaserScan
 import braitenbug.geometry as geo
 
 
-class NormalizedDistanceArray:
+class NormalizedDistance:
 
     def __init__(self,
-                 angles: list[float],
-                 distances: list[float]
+                 angle: float,
+                 distance: float
                  )-> None:
-        self.angles = angles
-        self.distances = distances
+        self.angle = angle
+        self.distance = distance
 
 
 class NormalizedLidarScan:
@@ -25,12 +25,43 @@ class NormalizedLidarScan:
     __EPSILON: float = 0.0001
 
     def __init__(self, scan: LaserScan)->None:
-        scan_range = scan.angle_max - scan.angle_min
-        if scan_range - 2 * np.pi < self.__EPSILON:
-            raise ValueError('NormalizedLidarScan is intended for use with 360 lidars,' +
-                             f' insted lidar wiht range {scan_range}rad was used.')
+        self.__validate_scan(scan)
         self.__angle_min = scan.angle_min
+        self.__step = scan.angle_increment
         distances = np.asarray(scan.ranges, dtype=np.float64)
         self.__distances = (distances - scan.range_min) / (scan.range_max-scan.range_min)
 
+    def __getitem__(self, key:float|slice)-> NormalizedDistance| list[NormalizedDistance]:
+        if isinstance(key, float):
+            pass
+        if isinstance(key, slice):
+            pass
+        raise KeyError(f'NormalizedLidarScan must be indexed with float or foat based slice')
 
+    def __validate_scan(self, scan: LaserScan)-> None:
+        scan_range = scan.angle_max - scan.angle_min
+        if abs(scan_range - 2 * np.pi) > self.__EPSILON:
+            raise ValueError('NormalizedLidarScan is intended for use with 360 lidars,' +
+                             f' insted lidar wiht range {scan_range}rad was used.')
+        calculated_angle_max = self.__angle_min + self.__step * len(self.__distances)
+        if abs(calculated_angle_max - self.__angle_max) > self.__EPSILON:
+            raise ValueError(f'Calculated max angle is different than one given by lidar')
+
+
+    def __get_single_readout(self, angle: float) -> NormalizedDistance:
+        pass
+
+    def __get_readouts_from_range(self, start: float, end: float)-> list[NormalizedDistance]:
+        distances = []
+        if start == end:
+            distances.append(self.__get_single_readout(start))
+            return distances
+        
+
+    @staticmethod
+    def __to_basic_angle(angle: float)-> float:
+        while angle > 2*np.pi:
+            angle -= 2*np.pi
+        while angle < 0:
+            angle += 2*np.pi
+        return angle
