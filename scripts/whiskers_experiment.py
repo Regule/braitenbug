@@ -33,9 +33,9 @@ class NormalizedLidarScan:
 
     def __getitem__(self, key:float|slice)-> NormalizedDistance| list[NormalizedDistance]:
         if isinstance(key, float):
-            pass
+            return self.__get_readouts_from_range(key, key)
         if isinstance(key, slice):
-            pass
+            return self.__get_readouts_from_range(key.start, key.stop)
         raise KeyError(f'NormalizedLidarScan must be indexed with float or foat based slice')
 
     def __validate_scan(self, scan: LaserScan)-> None:
@@ -47,15 +47,34 @@ class NormalizedLidarScan:
         if abs(calculated_angle_max - self.__angle_max) > self.__EPSILON:
             raise ValueError(f'Calculated max angle is different than one given by lidar')
 
+    def __get_index_for_angle(self, angle: float)-> int:
+        angle -= self.__angle_min
+        return angle // self.__step
 
     def __get_single_readout(self, angle: float) -> NormalizedDistance:
-        pass
+        return NormalizedDistance(angle, self.__distances[self.__get_index_for_angle(angle)])
 
     def __get_readouts_from_range(self, start: float, end: float)-> list[NormalizedDistance]:
         distances = []
-        if start == end:
-            distances.append(self.__get_single_readout(start))
-            return distances
+        start = self.__to_basic_angle(start)
+        end = self.__to_basic_angle(end)
+        angle = start
+        if start <= end:
+            while angle <= end:
+                distances.append(self.__get_single_readout(angle))
+                angle += self.__step
+        else:
+            angle_max = self.__angle_min + self.__step * (len(self.__distances)-1)
+            while angle <= angle_max:
+                distances.append(self.__get_single_readout(angle))
+                angle += self.__step
+            angle = self.__angle_min
+            while angle <= end:
+                distances.append(self.__get_single_readout(angle))
+                angle += self.__step
+
+
+        return distances
         
 
     @staticmethod
@@ -65,3 +84,21 @@ class NormalizedLidarScan:
         while angle < 0:
             angle += 2*np.pi
         return angle
+
+#==================================================================================================
+#                                        NODE
+#==================================================================================================
+
+class LidarMonitor(Node):
+    def __init__(self):
+        super().__init__('whiskers_experiment')
+        self._subscription = self.create_subscription(
+            LaserScan,
+            'scan',
+            self.scan_callback,
+            10)
+        self.max_distance = 1.0
+        self.scan = LaserScan()
+    
+    def scan_callback(self, msg: LaserScan):
+        self.scan = msg
