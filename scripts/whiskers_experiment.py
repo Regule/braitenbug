@@ -137,8 +137,8 @@ class Cone:
                  )-> None:
         self.__config = ConeConfig(position, radius, angle, width)
         self.scan: NormalizedLaserScan = NormalizedLaserScan()
-        self.start = 0
-        self.end = 0
+        self.start = angle - width/2
+        self.end = angle + width/2
 
 
     def render(self, surface: pg.Surface)-> None:
