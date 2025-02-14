@@ -28,11 +28,12 @@ class NormalizedLaserScan:
         if scan is None:
             self.__distances = None
             return
-        self.__validate_scan(scan)
         self.__angle_min = scan.angle_min
         self.__step = scan.angle_increment
         distances = np.asarray(scan.ranges, dtype=np.float64)
         self.__distances = (distances - scan.range_min) / (scan.range_max-scan.range_min)
+        self.__validate_scan(scan)
+        
 
     def __getitem__(self, key:float|slice)-> NormalizedDistance| list[NormalizedDistance]:
         if isinstance(key, float):
@@ -47,16 +48,18 @@ class NormalizedLaserScan:
             raise ValueError('NormalizedLidarScan is intended for use with 360 lidars,' +
                              f' insted lidar wiht range {scan_range}rad was used.')
         calculated_angle_max = self.__angle_min + self.__step * len(self.__distances)
-        if abs(calculated_angle_max - self.__angle_max) > self.__EPSILON:
+        if abs(calculated_angle_max - scan.angle_max) > self.__EPSILON:
             raise ValueError(f'Calculated max angle is different than one given by lidar')
 
     def __get_index_for_angle(self, angle: float)-> int:
         angle -= self.__angle_min
-        return angle // self.__step
+        return int(angle // self.__step)
 
     def __get_single_readout(self, angle: float) -> NormalizedDistance:
         if self.__distances is None:
-            return NormaizedDistance(angle, 1.0)
+            return NormalizedDistance(angle, 1.0)
+        logger = rclpy.logging.get_logger('my_logger')
+        logger.warning(f'!! TYPE = {type(self.__get_index_for_angle(angle))}')
         return NormalizedDistance(angle, self.__distances[self.__get_index_for_angle(angle)])
 
     def __get_readouts_from_range(self, start: float, end: float)-> list[NormalizedDistance]:
@@ -143,14 +146,14 @@ class Cone:
     
         measurements = self.scan[self.start:self.end]
         for measurement in measurements:
-            line_lengths *= measurement.distance * self.radius
-            angle = geo.angle_ros2_to_pygame(measirement.angle)
+            line_length = measurement.distance * self.__config.radius
+            angle = geo.angle_ros2_to_pygame(measurement.angle)
             endpoint = geo.polar_to_cartesian(line_length, angle)
-            endpoint[0] = int(endpoint[0] + self.position[0])
-            endpoint[1] = int(endpoint[1] + self.position[1])
+            endpoint[0] = int(endpoint[0] + self.__config.position[0])
+            endpoint[1] = int(endpoint[1] + self.__config.position[1])
             pg.draw.line(surface,
                          (255, 0, 0),
-                         (self.position[0], self.position[1]),
+                         (self.__config.position[0], self.__config.position[1]),
                          (endpoint[0], endpoint[1]),
                          2)
 
@@ -165,8 +168,7 @@ class LidarUI:
         self.__angle_step: float = np.pi/64
 
         center: tuple[int,int] = (self.__size[0]//2, self.__size[1]//2)
-        self.__wheel:Wheel = Wheel(center)
-        self.__cone:Cone = Cone(center)
+        self.__measurements_all:Cone = Cone(center)
         self.__font =  None
 
     def run(self)-> None:
@@ -195,28 +197,27 @@ class LidarUI:
 
     def __handle_keyboard(self):
         keys = pg.key.get_pressed()
-        if keys[pg.K_UP]:
-            self.__cone.width += self.__angle_step
-        if keys[pg.K_DOWN]:
-            self.__cone.width -= self.__angle_step
-        if keys[pg.K_LEFT]:
-            self.__cone.angle += self.__angle_step
-        if keys[pg.K_RIGHT]:
-            self.__cone.angle -= self.__angle_step
+        # if keys[pg.K_UP]:
+        #     self.__cone.width += self.__angle_step
+        # if keys[pg.K_DOWN]:
+        #     self.__cone.width -= self.__angle_step
+        # if keys[pg.K_LEFT]:
+        #     self.__cone.angle += self.__angle_step
+        # if keys[pg.K_RIGHT]:
+        #     self.__cone.angle -= self.__angle_step
 
 
     def __update_logic(self)-> None:
         rclpy.spin_once(self.__node, timeout_sec=0)
-        self.__wheel.scan = self.__node.scan
-        self.__cone.scan = self.__node.scan
+        self.__measurements_all.scan = NormalizedLaserScan(self.__node.scan)
+        # self.__cone.scan = self.__node.scan
 
     def __render(self)-> None:
         self.__display.fill((0,0,0))
-        self.__wheel.render(self.__display)
-        self.__cone.render(self.__display)
-        msg = f'Start={self.__cone.start}  End={self.__cone.end}'
-        label = self.__font.render(msg, 1, (255,255,0))
-        self.__display.blit(label, (0, self.__size[1]-30))
+        self.__measurements_all.render(self.__display)
+        # msg = f'Start={self.__cone.start}  End={self.__cone.end}'
+        # label = self.__font.render(msg, 1, (255,255,0))
+        # self.__display.blit(label, (0, self.__size[1]-30))
         pg.display.flip()
         self.__clock.tick(60) # FPS cap
 
@@ -231,10 +232,10 @@ def main(args=None):
     rclpy.init(args=args)
 
     monitor = LidarMonitor()
-    #ui = LidarUI(monitor)
-    #ui.run()
-    rclpy.spin(monitor)
-    monitor.destroy_node()
+    ui = LidarUI(monitor)
+    ui.run()
+    #rclpy.spin(monitor)
+    #monitor.destroy_node()
     rclpy.shutdown()
 
 

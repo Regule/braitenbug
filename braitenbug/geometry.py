@@ -11,5 +11,11 @@ def polar_to_cartesian_matrix(r: npt.NDArray[np.float64],
     cartesian_matrix = np.vstack((x, y))
     return cartesian_matrix
 
+def polar_to_cartesian(r: float,
+                       theta:float )-> list[float, float]:    
+    x = r * np.cos(theta)
+    y = r * np.sin(theta)
+    return [x, y]
+
 def angle_ros2_to_pygame(angle: float)-> float:
     return np.pi + np.pi/2 - angle
