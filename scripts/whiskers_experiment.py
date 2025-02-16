@@ -58,8 +58,6 @@ class NormalizedLaserScan:
     def __get_single_readout(self, angle: float) -> NormalizedDistance:
         if self.__distances is None:
             return NormalizedDistance(angle, 1.0)
-        logger = rclpy.logging.get_logger('my_logger')
-        logger.warning(f'!! TYPE = {type(self.__get_index_for_angle(angle))}')
         return NormalizedDistance(angle, self.__distances[self.__get_index_for_angle(angle)])
 
     def __get_readouts_from_range(self, start: float, end: float)-> list[NormalizedDistance]:
